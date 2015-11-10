@@ -15,23 +15,20 @@ namespace asgn5v1
 	public class Transformer : System.Windows.Forms.Form
 	{
 		private System.ComponentModel.IContainer components;
-		//private bool GetNewData();
+        //private bool GetNewData();
 
-		// basic data for Transformer
+        // basic data for Transformer
 
-		int numpts = 0;
+        int numpts = 0;
 		int numlines = 0;
 		bool gooddata = false;
         int numCoords;
 		double[,] vertices;
 		double[,] scrnpts;
         double[,] tNet;
-        double[,] translationMatrix = new double[4,4];
-        double[,] scalingMatrix = new double[4,4];
-        double[,] rotationMatix = new double[4,4]; 
         double cosine = Math.Cos(0.05);
         double sine = Math.Sin(0.05);
-		double[,] ctrans = new double[4,4];  //your main transformation matrix
+		static double[,] ctrans = new double[4,4];  //your main transformation matrix
 		private System.Windows.Forms.ImageList tbimages;
 		private System.Windows.Forms.ToolBar toolBar1;
 		private System.Windows.Forms.ToolBarButton transleftbtn;
@@ -70,7 +67,7 @@ namespace asgn5v1
 			this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
 			this.SetStyle(ControlStyles.UserPaint, true);
 			this.SetStyle(ControlStyles.DoubleBuffer, true);
-			Text = "COMP 4560:  Assignment 5 (200830) (Your Name Here)";
+			Text = "COMP 4560:  Assignment 5 (200830) Jessica Tekenos";
 			ResizeRedraw = true;
 			BackColor = Color.Black;
 			MenuItem miNewDat = new MenuItem("New &Data...",
@@ -338,7 +335,7 @@ namespace asgn5v1
 		protected override void OnPaint(PaintEventArgs pea)
 		{
 			Graphics grfx = pea.Graphics;
-         Pen pen = new Pen(Color.White, 3);
+            Pen pen = new Pen(Color.White, 3);
 			double temp;
 			int k;
 
@@ -346,24 +343,25 @@ namespace asgn5v1
             {
                 //create the screen coordinates:
                 // scrnpts = vertices*ctrans
-
                 for (int i = 0; i < numpts; i++)
                 {
                     for (int j = 0; j < 4; j++)
                     {
-                        temp = 0.0d;
+                        temp = 0.000d;
                         for (k = 0; k < 4; k++)
-                            temp += vertices[i, k] * ctrans[k, j];
-                        scrnpts[i, j] = temp;
+                        {                           
+                            temp += vertices[i, k] * ctrans[k, j];                            
+                        }
+                     scrnpts[i, j] = temp;
                     }
                 }
-
-                //MessageBox.Show("Scrnpts " + scrnpts[0, 1]);
+                MessageBox.Show("screen middle" + scrnpts[0, 0] + " " + scrnpts[0, 1]);
 
                 //now draw the lines
-
+                //MessageBox.Show("numline: " + numlines);
                 for (int i = 0; i < numlines; i++)
                 {
+                    
                     grfx.DrawLine(pen, (int)scrnpts[lines[i, 0], 0], (int)scrnpts[lines[i, 0], 1],
                         (int)scrnpts[lines[i, 1], 0], (int)scrnpts[lines[i, 1], 1]);
                 }
@@ -441,7 +439,7 @@ namespace asgn5v1
 				return false;
 			}
 			scrnpts = new double[numpts,4];
-			setIdentity(ctrans,4,4);  //initialize transformation matrix to identity
+			setIdentity(4,4);  //initialize transformation matrix to identity
 			return true;
 		} // end of GetNewData
 
@@ -451,11 +449,13 @@ namespace asgn5v1
 
             display.Width = ClientRectangle.Width;
             display.Height = ClientRectangle.Height;
-            double midw = (double)display.Width / 2.0d;
-            double midh = (double)display.Height / 2.0d;
+            double midw = (double)display.Width / 2.000d;
+            double midh = (double)display.Height / 2.000d;
+            double midz = (double)display.Height - display.Height / 2.000d;
             double scaleFactor = midh * .05000;
 
-			//this may allocate slightly more rows that necessary
+            //this may allocate slightly more rows that necessary
+            numCoords = coorddata.Count;
             vertices = new double[coorddata.Count, 4];
             numpts = 0;
             string[] text = null;
@@ -473,10 +473,10 @@ namespace asgn5v1
                 }
 
                 vertices[numpts, 1] = (midh - (double.Parse(text[1]) * scaleFactor)) + (midh * .500);
-				vertices[numpts,2]=double.Parse(text[2]);
-				vertices[numpts,3] = 1.0d;
-				numpts++;						
-			}
+                vertices[numpts, 2] = ((double.Parse(text[2]) * scaleFactor) + midz) - (midh * 0.500);
+                vertices[numpts, 3] = 1.000d;
+                numpts++;
+            }
 			
 		}// end of DecodeCoords
 
@@ -496,12 +496,12 @@ namespace asgn5v1
 			}
 		} // end of DecodeLines
 
-		void setIdentity(double[,] A,int nrow,int ncol)
+		void setIdentity(int nrow,int ncol)
 		{
 			for (int i = 0; i < nrow;i++) 
 			{
-				for (int j = 0; j < ncol; j++) A[i,j] = 0.0d;
-				A[i,i] = 1.0d;
+				for (int j = 0; j < ncol; j++) ctrans[i,j] = 0.000d;
+				ctrans[i,i] = 1.000d;
 			}
 		}// end of setIdentity
 
@@ -510,28 +510,19 @@ namespace asgn5v1
             tNet = new double[4, 4];
             double temp = 0;
 
-            for (int i = 0; i < 4; i++)
-            {
-                for (int j = 0; j < 4; j++)
+             for (int i = 0; i < 4; i++)
                 {
-                    temp = 0.000d;
-                    for (int k = 0; k < 4; k++)
+                    for (int j = 0; j < 4; j++)
                     {
-                        temp += A[i, k] * B[k, j];
+                        temp = 0.000d;
+                        for (int k = 0; k < 4; k++)
+                        {                           
+                            temp += A[i, k] * B[k, j];                            
+                        }
+                     tNet[i, j] = temp;
                     }
-                    tNet[i, j] = temp;
                 }
-            }
-            return tNet;
-        }
-
-        private double[,] translation(double x, double y, double z)
-        {
-            double[,] result ={{1.0, 0.0, 0.0, 0.0},
-                               {0.0, 1.0, 0.0, 0.0},
-                               {0.0, 0.0, 1.0, 0.0}, 
-                               {x,   y,   z,   1.0}};
-            return result;
+             return tNet;
         }
 
         private double[,] scaling(double x, double y, double z)
@@ -543,93 +534,6 @@ namespace asgn5v1
             return result;
         }
 
-        private double[,] rotationX(double theta)
-        {
-            double cos = Math.Cos(theta);
-            double sin = Math.Sin(theta);
-            double[,] result ={{1.0, 0.0, 0.0, 0.0},
-                               {0.0, cos, sin, 0.0},
-                               {0.0, -sin, cos, 0.0}, 
-                               {0.0, 0.0, 0.0, 1.0}};
-            return result;
-        }
-
-        private double[,] rotationY(double theta)
-        {
-            double cos = Math.Cos(theta);
-            double sin = Math.Sin(theta);
-            double[,] result ={{cos, 0.0, -sin, 0.0},
-                               {0.0, 1.0, 0.0, 0.0},
-                               {sin, 0.0, cos, 0.0}, 
-                               {0.0, 0.0, 0.0, 1.0}};
-            return result;
-        }
-
-        private double[,] rotationZ(double theta)
-        {
-            double cos = Math.Cos(theta);
-            double sin = Math.Sin(theta);
-            double[,] result ={{cos, sin, 0.0, 0.0},
-                               {-sin, cos, 0.0, 0.0},
-                               {0.0, 0.0, 1.0, 0.0}, 
-                               {0.0, 0.0, 0.0, 1.0}};
-            return result;
-        }
-
-        private double[,] moveToOrigin() 
-        {
-            double[,] result = {{1.0, 0.0, 0.0, 0.0},
-                                {0.0, 1.0, 0.0, 0.0},
-                                {0.0, 0.0, 1.0, 0.0}, 
-                                {-scrnpts[0,0], -scrnpts[0,1], 0.0, 1.0}};
-            return result;
-        }
-
-        private double[,] moveBack()
-        {
-            double[,] result = {{1.0, 0.0, 0.0, 0.0},
-                                {0.0, 1.0, 0.0, 0.0},
-                                {0.0, 0.0, 1.0, 0.0}, 
-                                {scrnpts[0,0], scrnpts[0,1], 0.0, 1.0}};
-            return result;
-        }
-
-        private double[,] scalingOp(double x, double y, double z)
-        {
-            var scale = scaling(x, y, z);
-            var translate = moveToOrigin();
-            var translateBack = moveBack();
-            var aTimesB = multiplyMatrices(translate, scale);
-            var abTimesC = multiplyMatrices(aTimesB, translateBack);
-            return abTimesC;
-        }
-
-        private double[,] rotateOp(char axis, double theta)
-        {
-            var rotate = new double[4,4]; 
-            switch (axis)
-            {
-                case 'x':
-                    rotate = rotationX(theta);
-                    break;
-                case 'y':
-                    rotate = rotationY(theta);
-                    break;
-                case 'z':
-                    rotate = rotationZ(theta);
-                    break;
-                default:
-                    rotate = rotationX(theta);
-                    break;
-            }
-
-            var translate = moveToOrigin();
-            var translateBack = moveBack();
-            var aTimesB = multiplyMatrices(translate, rotate);
-            var abTimesC = multiplyMatrices(aTimesB, translateBack);
-            return abTimesC;
-        }
-
 		private void Transformer_Load(object sender, System.EventArgs e)
 		{
 			
@@ -639,60 +543,77 @@ namespace asgn5v1
 		{
 			if (e.Button == transleftbtn)
 			{
-                ctrans[3, 0] += -75.0;
-				Refresh();
-                MessageBox.Show("screenpts " + scrnpts[0,0] + " " + scrnpts[0,1]);
+                //setTranslateLeft(4, 4);
+                ctrans[3, 0] -= 75.000;
+                Refresh();
 			}
 			if (e.Button == transrightbtn) 
 			{
-                ctrans[3, 0] += 75.0;
+                //setTranslateRight(4, 4);
+                ctrans[3, 0] += 75.000; 
 				Refresh();
 			}
 			if (e.Button == transupbtn)
 			{
-                ctrans[3, 1] += -35.0;
+                //setTranslateUp(4, 4);
+                // negative because screen coords increase downwards
+                ctrans[3, 1] -= 35.000; 
 				Refresh();
 			}
 			
 			if(e.Button == transdownbtn)
 			{
-                ctrans[3, 1] += 35.0;
+                //setTranslateDown(4, 4);
+                ctrans[3, 1] += 35.000; 
 				Refresh();
 			}
+
 			if (e.Button == scaleupbtn) 
 			{
-                var resultOfScaling = scalingOp(1.1, 1.1, 0);
-                var applyScaling = multiplyMatrices(ctrans, resultOfScaling);
-                ctrans = applyScaling;
-                Refresh();
+                double[,] scaleMatrix = scaling(1.0, 1.0, 1.0);
+                double[,] tnet = multiplyMatrices(scrnpts, ctrans);
+                ctrans = tnet;
+				Refresh();
 			}
 			if (e.Button == scaledownbtn) 
 			{
-                var resultOfScaling = scalingOp(0.9, 0.9, 0);
-                var applyScaling = multiplyMatrices(ctrans, resultOfScaling);
-                ctrans = applyScaling;
-                Refresh();
+                double tempx = scrnpts[0, 0] * -1;
+                double tempy = scrnpts[0, 1] * -1;
+                ctrans[0, 0] *= 0.900;
+                ctrans[1, 1] *= 0.900;
+                ctrans[3, 0] += tempx;
+                ctrans[3, 1] += tempy;
+				Refresh();
 			}
 			if (e.Button == rotxby1btn) 
 			{
-                var resultOfRotation = rotateOp('x', 0.05);
-                var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
-                ctrans = applyRotation;
-                Refresh();	
+                ctrans[1, 1] = cosine;
+                ctrans[1, 2] = sine;
+                ctrans[2, 1] = -sine;
+                ctrans[2, 2] = cosine;
+
+                Refresh();
+				
 			}
 			if (e.Button == rotyby1btn) 
 			{
-                var resultOfRotation = rotateOp('y', 0.05);
-                var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
-                ctrans = applyRotation;
+                ctrans[0, 0] = cosine;
+                ctrans[2, 0] = sine;
+                ctrans[0, 2] = -sine;
+                ctrans[2, 2] = cosine;
+
                 Refresh();
+				
 			}
 			if (e.Button == rotzby1btn) 
 			{
-                var resultOfRotation = rotateOp('z', 0.05);
-                var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
-                ctrans = applyRotation;
+                ctrans[0, 0] = cosine;
+                ctrans[1, 0] = -sine;
+                ctrans[0, 1] = sine;
+                ctrans[1, 1] = cosine;
+
                 Refresh();
+						
 			}
 
 			if (e.Button == rotxbtn) 
@@ -721,7 +642,8 @@ namespace asgn5v1
 
 			if (e.Button == resetbtn)
 			{
-				setIdentity(ctrans, 4, 4);
+				//RestoreInitialImage();
+                setIdentity(4, 4);
                 Refresh();
 			}
 

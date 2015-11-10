@@ -21,17 +21,10 @@ namespace asgn5v1
 
 		int numpts = 0;
 		int numlines = 0;
-		bool gooddata = false;
-        int numCoords;
+		bool gooddata = false;		
 		double[,] vertices;
 		double[,] scrnpts;
-        double[,] tNet;
-        double[,] translationMatrix = new double[4,4];
-        double[,] scalingMatrix = new double[4,4];
-        double[,] rotationMatix = new double[4,4]; 
-        double cosine = Math.Cos(0.05);
-        double sine = Math.Sin(0.05);
-		double[,] ctrans = new double[4,4];  //your main transformation matrix
+		double[,] ctrans = new double[4,4];
 		private System.Windows.Forms.ImageList tbimages;
 		private System.Windows.Forms.ToolBar toolBar1;
 		private System.Windows.Forms.ToolBarButton transleftbtn;
@@ -70,7 +63,7 @@ namespace asgn5v1
 			this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
 			this.SetStyle(ControlStyles.UserPaint, true);
 			this.SetStyle(ControlStyles.DoubleBuffer, true);
-			Text = "COMP 4560:  Assignment 5 (200830) (Your Name Here)";
+			Text = "COMP 4560:  Assignment 5 (200810) DWS(V1.01-Student)";
 			ResizeRedraw = true;
 			BackColor = Color.Black;
 			MenuItem miNewDat = new MenuItem("New &Data...",
@@ -338,7 +331,7 @@ namespace asgn5v1
 		protected override void OnPaint(PaintEventArgs pea)
 		{
 			Graphics grfx = pea.Graphics;
-         Pen pen = new Pen(Color.White, 3);
+			Pen pen = new Pen(Color.White,3);
 			double temp;
 			int k;
 
@@ -357,8 +350,6 @@ namespace asgn5v1
                         scrnpts[i, j] = temp;
                     }
                 }
-
-                //MessageBox.Show("Scrnpts " + scrnpts[0, 1]);
 
                 //now draw the lines
 
@@ -441,38 +432,22 @@ namespace asgn5v1
 				return false;
 			}
 			scrnpts = new double[numpts,4];
-			setIdentity(ctrans,4,4);  //initialize transformation matrix to identity
+			setIdentity(ctrans,4,4);
 			return true;
 		} // end of GetNewData
 
 		void DecodeCoords(ArrayList coorddata)
 		{
-            PictureBox display = new PictureBox();
-
-            display.Width = ClientRectangle.Width;
-            display.Height = ClientRectangle.Height;
-            double midw = (double)display.Width / 2.0d;
-            double midh = (double)display.Height / 2.0d;
-            double scaleFactor = midh * .05000;
-
 			//this may allocate slightly more rows that necessary
-            vertices = new double[coorddata.Count, 4];
-            numpts = 0;
-            string[] text = null;
-            for (int i = 0; i < coorddata.Count; i++)
-            {
-                text = coorddata[i].ToString().Split(' ', ',');
-                vertices[numpts, 0] = double.Parse(text[0]);
-                if (vertices[numpts, 0] < 0.000d)
-                {
-                    break;
-                }
-                else
-                {
-                    vertices[numpts, 0] = ((double.Parse(text[0]) * scaleFactor) + midw) - (midh * .500);
-                }
-
-                vertices[numpts, 1] = (midh - (double.Parse(text[1]) * scaleFactor)) + (midh * .500);
+			vertices = new double[coorddata.Count,4];
+			numpts = 0;
+			string [] text = null;
+			for (int i = 0; i < coorddata.Count; i++)
+			{
+				text = coorddata[i].ToString().Split(' ',',');
+				vertices[numpts,0]=double.Parse(text[0]);
+				if (vertices[numpts,0] < 0.0d) break;
+				vertices[numpts,1]=double.Parse(text[1]);
 				vertices[numpts,2]=double.Parse(text[2]);
 				vertices[numpts,3] = 1.0d;
 				numpts++;						
@@ -505,130 +480,7 @@ namespace asgn5v1
 			}
 		}// end of setIdentity
 
-        private double[,] multiplyMatrices(double[,] A, double[,] B)
-        {
-            tNet = new double[4, 4];
-            double temp = 0;
-
-            for (int i = 0; i < 4; i++)
-            {
-                for (int j = 0; j < 4; j++)
-                {
-                    temp = 0.000d;
-                    for (int k = 0; k < 4; k++)
-                    {
-                        temp += A[i, k] * B[k, j];
-                    }
-                    tNet[i, j] = temp;
-                }
-            }
-            return tNet;
-        }
-
-        private double[,] translation(double x, double y, double z)
-        {
-            double[,] result ={{1.0, 0.0, 0.0, 0.0},
-                               {0.0, 1.0, 0.0, 0.0},
-                               {0.0, 0.0, 1.0, 0.0}, 
-                               {x,   y,   z,   1.0}};
-            return result;
-        }
-
-        private double[,] scaling(double x, double y, double z)
-        {
-            double[,] result ={{x, 0.0, 0.0, 0.0},
-                               {0.0, y, 0.0, 0.0},
-                               {0.0, 0.0, z, 0.0}, 
-                               {0.0, 0.0, 0.0, 1.0}};
-            return result;
-        }
-
-        private double[,] rotationX(double theta)
-        {
-            double cos = Math.Cos(theta);
-            double sin = Math.Sin(theta);
-            double[,] result ={{1.0, 0.0, 0.0, 0.0},
-                               {0.0, cos, sin, 0.0},
-                               {0.0, -sin, cos, 0.0}, 
-                               {0.0, 0.0, 0.0, 1.0}};
-            return result;
-        }
-
-        private double[,] rotationY(double theta)
-        {
-            double cos = Math.Cos(theta);
-            double sin = Math.Sin(theta);
-            double[,] result ={{cos, 0.0, -sin, 0.0},
-                               {0.0, 1.0, 0.0, 0.0},
-                               {sin, 0.0, cos, 0.0}, 
-                               {0.0, 0.0, 0.0, 1.0}};
-            return result;
-        }
-
-        private double[,] rotationZ(double theta)
-        {
-            double cos = Math.Cos(theta);
-            double sin = Math.Sin(theta);
-            double[,] result ={{cos, sin, 0.0, 0.0},
-                               {-sin, cos, 0.0, 0.0},
-                               {0.0, 0.0, 1.0, 0.0}, 
-                               {0.0, 0.0, 0.0, 1.0}};
-            return result;
-        }
-
-        private double[,] moveToOrigin() 
-        {
-            double[,] result = {{1.0, 0.0, 0.0, 0.0},
-                                {0.0, 1.0, 0.0, 0.0},
-                                {0.0, 0.0, 1.0, 0.0}, 
-                                {-scrnpts[0,0], -scrnpts[0,1], 0.0, 1.0}};
-            return result;
-        }
-
-        private double[,] moveBack()
-        {
-            double[,] result = {{1.0, 0.0, 0.0, 0.0},
-                                {0.0, 1.0, 0.0, 0.0},
-                                {0.0, 0.0, 1.0, 0.0}, 
-                                {scrnpts[0,0], scrnpts[0,1], 0.0, 1.0}};
-            return result;
-        }
-
-        private double[,] scalingOp(double x, double y, double z)
-        {
-            var scale = scaling(x, y, z);
-            var translate = moveToOrigin();
-            var translateBack = moveBack();
-            var aTimesB = multiplyMatrices(translate, scale);
-            var abTimesC = multiplyMatrices(aTimesB, translateBack);
-            return abTimesC;
-        }
-
-        private double[,] rotateOp(char axis, double theta)
-        {
-            var rotate = new double[4,4]; 
-            switch (axis)
-            {
-                case 'x':
-                    rotate = rotationX(theta);
-                    break;
-                case 'y':
-                    rotate = rotationY(theta);
-                    break;
-                case 'z':
-                    rotate = rotationZ(theta);
-                    break;
-                default:
-                    rotate = rotationX(theta);
-                    break;
-            }
-
-            var translate = moveToOrigin();
-            var translateBack = moveBack();
-            var aTimesB = multiplyMatrices(translate, rotate);
-            var abTimesC = multiplyMatrices(aTimesB, translateBack);
-            return abTimesC;
-        }
+		
 
 		private void Transformer_Load(object sender, System.EventArgs e)
 		{
@@ -639,60 +491,40 @@ namespace asgn5v1
 		{
 			if (e.Button == transleftbtn)
 			{
-                ctrans[3, 0] += -75.0;
 				Refresh();
-                MessageBox.Show("screenpts " + scrnpts[0,0] + " " + scrnpts[0,1]);
 			}
 			if (e.Button == transrightbtn) 
 			{
-                ctrans[3, 0] += 75.0;
 				Refresh();
 			}
 			if (e.Button == transupbtn)
 			{
-                ctrans[3, 1] += -35.0;
 				Refresh();
 			}
 			
 			if(e.Button == transdownbtn)
 			{
-                ctrans[3, 1] += 35.0;
 				Refresh();
 			}
 			if (e.Button == scaleupbtn) 
 			{
-                var resultOfScaling = scalingOp(1.1, 1.1, 0);
-                var applyScaling = multiplyMatrices(ctrans, resultOfScaling);
-                ctrans = applyScaling;
-                Refresh();
+				Refresh();
 			}
 			if (e.Button == scaledownbtn) 
 			{
-                var resultOfScaling = scalingOp(0.9, 0.9, 0);
-                var applyScaling = multiplyMatrices(ctrans, resultOfScaling);
-                ctrans = applyScaling;
-                Refresh();
+				Refresh();
 			}
 			if (e.Button == rotxby1btn) 
 			{
-                var resultOfRotation = rotateOp('x', 0.05);
-                var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
-                ctrans = applyRotation;
-                Refresh();	
+				
 			}
 			if (e.Button == rotyby1btn) 
 			{
-                var resultOfRotation = rotateOp('y', 0.05);
-                var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
-                ctrans = applyRotation;
-                Refresh();
+				
 			}
 			if (e.Button == rotzby1btn) 
 			{
-                var resultOfRotation = rotateOp('z', 0.05);
-                var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
-                ctrans = applyRotation;
-                Refresh();
+				
 			}
 
 			if (e.Button == rotxbtn) 
@@ -721,8 +553,7 @@ namespace asgn5v1
 
 			if (e.Button == resetbtn)
 			{
-				setIdentity(ctrans, 4, 4);
-                Refresh();
+				RestoreInitialImage();
 			}
 
 			if(e.Button == exitbtn) 
