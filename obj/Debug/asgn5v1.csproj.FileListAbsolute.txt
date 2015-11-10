@@ -22,3 +22,5 @@ C:\Users\Jessica\Desktop\asgn5\obj\Debug\asgn5v1.csprojResolveAssemblyReference.
 C:\Users\Jessica\Desktop\asgn5\obj\Debug\asgn5v1.AboutDialogBox.resources
 C:\Users\Jessica\Desktop\asgn5\obj\Debug\asgn5v1.Transformer.resources
 C:\Users\Jessica\Desktop\asgn5\obj\Debug\asgn5v1.csproj.GenerateResource.Cache
+C:\Users\Jessica\Documents\School\Fall 2015\COMP4560 - Graphics\Assignments\ShapeTransformer\obj\Debug\asgn5v1.exe
+C:\Users\Jessica\Documents\School\Fall 2015\COMP4560 - Graphics\Assignments\ShapeTransformer\obj\Debug\asgn5v1.pdb
