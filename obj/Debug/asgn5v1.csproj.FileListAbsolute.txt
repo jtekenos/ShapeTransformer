@@ -30,5 +30,3 @@ C:\Users\a00891453\Desktop\asgn5\obj\Debug\asgn5v1.csprojResolveAssemblyReferenc
 C:\Users\a00891453\Desktop\asgn5\obj\Debug\asgn5v1.AboutDialogBox.resources
 C:\Users\a00891453\Desktop\asgn5\obj\Debug\asgn5v1.Transformer.resources
 C:\Users\a00891453\Desktop\asgn5\obj\Debug\asgn5v1.csproj.GenerateResource.Cache
-C:\Users\Jessica\Documents\School\Fall 2015\COMP4560 - Graphics\Assignments\Assignment5\Ass5_Nov14\ShapeTransformer\obj\Debug\asgn5v1.exe
-C:\Users\Jessica\Documents\School\Fall 2015\COMP4560 - Graphics\Assignments\Assignment5\Ass5_Nov14\ShapeTransformer\obj\Debug\asgn5v1.pdb

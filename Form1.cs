@@ -505,6 +505,13 @@ namespace asgn5v1
 			}
 		}// end of setIdentity
 
+
+        ///<summary>
+        ///Multiplies two matrices together. 
+        ///</summary>
+        ///<param name="A">First matrix</param>
+        ///<param name="B">Second matrix</param>
+        ///<returns>Resulting matrix</returns>
         private double[,] multiplyMatrices(double[,] A, double[,] B)
         {
             tNet = new double[4, 4];
@@ -534,6 +541,13 @@ namespace asgn5v1
             return result;
         }
 
+        ///<summary>
+        ///Returns matrix for scaling with specified x, y, z factors.
+        ///</summary>
+        ///<param name="x">x scaling factor</param>
+        ///<param name="y">y scale factor</param>
+        ///<param name="z">z scale factor</param>
+        ///<returns>Result matrix for the rotation.</returns>
         private double[,] scaling(double x, double y, double z)
         {
             double[,] result ={{x, 0.0, 0.0, 0.0},
@@ -543,6 +557,11 @@ namespace asgn5v1
             return result;
         }
 
+        ///<summary>
+        ///Returns matrix for rotations around x axis.
+        ///</summary>
+        ///<param name="theta">The angle of rotation in radians.</param>
+        ///<returns>Result matrix for the rotation.</returns>
         private double[,] rotationX(double theta)
         {
             double cos = Math.Cos(theta);
@@ -554,6 +573,11 @@ namespace asgn5v1
             return result;
         }
 
+        ///<summary>
+        ///Returns matrix for rotations around y axis.
+        ///</summary>
+        ///<param name="theta">The angle of rotation in radians.</param>
+        ///<returns>Result matrix for the rotation.</returns>
         private double[,] rotationY(double theta)
         {
             double cos = Math.Cos(theta);
@@ -565,6 +589,11 @@ namespace asgn5v1
             return result;
         }
 
+        ///<summary>
+        ///Returns matrix for rotations around z axis.
+        ///</summary>
+        ///<param name="theta">The angle of rotation in radians.</param>
+        ///<returns>Result matrix for the rotation.</returns>
         private double[,] rotationZ(double theta)
         {
             double cos = Math.Cos(theta);
@@ -576,6 +605,10 @@ namespace asgn5v1
             return result;
         }
 
+        ///<summary>
+        ///Translates a shape to the origin.
+        ///</summary>
+        ///<returns>Translation matrix.</returns>
         private double[,] moveToOrigin() 
         {
             double[,] result = {{1.0, 0.0, 0.0, 0.0},
@@ -585,6 +618,10 @@ namespace asgn5v1
             return result;
         }
 
+        ///<summary>
+        ///Translates a shape from the origin.
+        ///</summary>
+        ///<returns>Translation matrix.</returns>
         private double[,] moveBack()
         {
             double[,] result = {{1.0, 0.0, 0.0, 0.0},
@@ -594,6 +631,13 @@ namespace asgn5v1
             return result;
         }
 
+        ///<summary>
+        ///Performs a 3-step scaling, moving to origin, scaling, returning to origin. 
+        ///</summary>
+        ///<param name="x">scaling factor for x</param>
+        ///<param name="y">scaling factor for y</param>
+        ///<param name="z">scaling factor for z</param>
+        ///<returns> abTimesC: the net transformation matrix.</returns>
         private double[,] scalingOp(double x, double y, double z)
         {
             var scale = scaling(x, y, z);
@@ -604,6 +648,11 @@ namespace asgn5v1
             return abTimesC;
         }
 
+        ///<summary>
+        ///Performs a 3-step rotation, moving to origin, rotating, returning to origin. 
+        ///</summary>
+        ///<param name="axis">The axis on which rotation is performed.</param>
+        ///<param name="theta">Rotation in radians.</param>
         private double[,] rotateOp(char axis, double theta)
         {
             var rotate = new double[4,4]; 
@@ -641,7 +690,6 @@ namespace asgn5v1
 			{
                 ctrans[3, 0] += -75.0;
 				Refresh();
-                //MessageBox.Show("screenpts " + scrnpts[0,0] + " " + scrnpts[0,1]);
 			}
 			if (e.Button == transrightbtn) 
 			{
