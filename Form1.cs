@@ -605,6 +605,15 @@ namespace asgn5v1
             return result;
         }
 
+        private double[,] shear(double s)
+        {
+            double[,] result ={{1.0, 0.0, 0.0, 0.0},
+                               {s, 1.0, 0.0, 0.0},
+                               {0.0, 0.0, 1.0, 0.0}, 
+                               {0.0, 0.0, 0.0, 1.0}};
+            return result;
+        }
+
         ///<summary>
         ///Translates a shape to the origin.
         ///</summary>
@@ -679,6 +688,53 @@ namespace asgn5v1
             return abTimesC;
         }
 
+        ///<summary>
+        ///Performs a 3-step rotation, moving to origin, shear on x axis, returning to origin. 
+        ///</summary>
+        ///<param name="dir">char (l or r) setting direction of shear.</param>
+        ///<param name="s">double, specifies shear factor.</param>
+        ///<returns>The net transformation matrix for a shearing of any object.</returns>
+        private double[,] shearOp(char dir, double s) {
+
+            //sets the direction of the shear
+            switch (dir)
+            {
+                case 'r':
+                    s = -s;
+                    break;
+            }
+
+            //find lowest y value
+            double minY = 1000000.0;
+            for (int i = 1; i < numpts; i++)
+            {
+                if (minY > scrnpts[i, 1])
+                {
+                    minY = scrnpts[i, 1];
+                }
+            }
+            //get half height of shape
+            double yCorretion = scrnpts[0,1] - minY;
+
+            var translate = moveToOrigin();
+            //Net matrix to align bottom edge of shape with x axis
+            var alignWithX = translation(0, -yCorretion, 0);
+            var shearing = shear(s);
+            var reverse = moveBack();
+            //Net matrix to return lower edge of shape
+            var reverseAlignWithX = translation(0, yCorretion, 0);
+            var fullreverse = multiplyMatrices(reverseAlignWithX, reverse);
+            var aTimesB = multiplyMatrices(translate, alignWithX);
+            var abTimesC = multiplyMatrices(aTimesB, shearing);
+            var abcTimesD = multiplyMatrices(abTimesC, fullreverse);
+            return abcTimesD;
+
+        }
+
+        private double incrementByRads(double x) {
+                return x+0.05;
+        }
+
 		private void Transformer_Load(object sender, System.EventArgs e)
 		{
 			
@@ -709,10 +765,25 @@ namespace asgn5v1
 			}
 			if (e.Button == scaleupbtn) 
 			{
+                
                 var resultOfScaling = scalingOp(1.1, 1.1, 1.1);
                 var applyScaling = multiplyMatrices(ctrans, resultOfScaling);
                 ctrans = applyScaling;
+                double minX = 100000.0;
+                double minY = 100000.0;
                 Refresh();
+
+                for (int i = 1; i < numpts; i++)
+                {
+                    if (minY > scrnpts[i, 1])
+                    {
+                        minY = scrnpts[i, 1];
+                    }
+                    if (minX > scrnpts[i, 0])
+                    {
+                        minX = scrnpts[i, 0];
+                    }
+                }
 			}
 			if (e.Button == scaledownbtn) 
 			{
@@ -742,37 +813,55 @@ namespace asgn5v1
                 ctrans = applyRotation;
                 Refresh();
 			}
-
 			if (e.Button == rotxbtn) 
 			{
-				
+                for (double i = 0.05; i < 10; incrementByRads(i))
+                {
+                    var resultOfRotation = rotateOp('x', i);
+                    var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
+                    ctrans = applyRotation;
+                    Refresh();
+                }
 			}
 			if (e.Button == rotybtn) 
 			{
-				
+                for (double i = 0.05; i < 10; incrementByRads(i))
+                {
+                    var resultOfRotation = rotateOp('y', i);
+                    var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
+                    ctrans = applyRotation;
+                    Refresh();
+                }
 			}
-			
 			if (e.Button == rotzbtn) 
 			{
-				
+                for (double i = 0.05; i < 10; incrementByRads(i))
+                {
+                    var resultOfRotation = rotateOp('z', i);
+                    var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
+                    ctrans = applyRotation;
+                    Refresh();
+                }
 			}
-
 			if(e.Button == shearleftbtn)
 			{
+                var resultOfShear = shearOp('l', 0.1);
+                var applyShearing = multiplyMatrices(ctrans, resultOfShear);
+                ctrans = applyShearing;
 				Refresh();
 			}
-
 			if (e.Button == shearrightbtn) 
 			{
+                var resultOfShear = shearOp('r', 0.1);
+                var applyShearing = multiplyMatrices(ctrans, resultOfShear);
+                ctrans = applyShearing;
 				Refresh();
 			}
-
 			if (e.Button == resetbtn)
 			{
 				setIdentity(ctrans, 4, 4);
                 Refresh();
 			}
-
 			if(e.Button == exitbtn) 
 			{
 				Close();
