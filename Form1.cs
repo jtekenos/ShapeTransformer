@@ -68,7 +68,7 @@ namespace asgn5v1
 			// Required for Windows Form Designer support
 			//
 			InitializeComponent();
-		    t.Interval = 20; // specify interval time as you want
+		    t.Interval = 5; // specify interval time as you want
             t.Tick += new EventHandler(timer_Tick);
 			//
 			// TODO: Add any constructor code after InitializeComponent call
@@ -796,7 +796,6 @@ namespace asgn5v1
             var abTimesC = multiplyMatrices(aTimesB, shearing);
             var abcTimesD = multiplyMatrices(abTimesC, fullreverse);
             return abcTimesD;
-
         }
 
         ///<summary>
@@ -814,6 +813,7 @@ namespace asgn5v1
             
 		}
 
+        //continuous rotation to be set to time (async)
         private void contRotation()
         {
             double i = 0.05;
@@ -824,11 +824,13 @@ namespace asgn5v1
             Refresh();
         }
 
+        //assign continuous rotation function to time
         void timer_Tick(object sender, EventArgs e)
         {
             contRotation();
         }
 
+        //to stop rotation for other translation buttions
         void setRotateFalse() 
         {
              rotateFlag = false;
@@ -918,15 +920,13 @@ namespace asgn5v1
                 ctrans = applyRotation;
                 Refresh();
 			}
-            
-            
 			if (e.Button == rotxbtn) 
 			{
                 rotationAxis = 'x';
                 if (rotateFlag)
                 {
-                    rotateFlag = false;
-                    t.Stop();
+                    //rotateFlag = false;
+                    //t.Stop();
                 }
                 else
                 {
@@ -938,30 +938,14 @@ namespace asgn5v1
 			if (e.Button == rotybtn) 
 			{
                 rotationAxis = 'y';
-                if (rotateFlag)
-                {
-                    rotateFlag = false;
-                    t.Stop();
-                }
-                else
-                {
-                    rotateFlag = true;
-                    t.Start();
-                }
+                rotateFlag = true;
+                t.Start();
 			}
 			if (e.Button == rotzbtn) 
 			{
                 rotationAxis = 'z';
-                if (rotateFlag)
-                {
-                    rotateFlag = false;
-                    t.Stop();
-                }
-                else
-                {
-                    rotateFlag = true;
-                    t.Start();
-                }
+                rotateFlag = true;
+                t.Start();
 			}
 			if(e.Button == shearleftbtn)
 			{
@@ -989,12 +973,6 @@ namespace asgn5v1
 			{
 				Close();
 			}
-
 		}
-
-
-		
 	}
-
-	
 }
