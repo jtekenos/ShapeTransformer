@@ -22,7 +22,8 @@ namespace asgn5v1
 		int numpts = 0;
 		int numlines = 0;
 		bool gooddata = false;
-        int numCoords;
+        //continuous rotation variables to be changed w/user click
+        char rotationAxis = 'x';
 		double[,] vertices;
 		double[,] scrnpts;
         double[,] tNet;
@@ -32,6 +33,9 @@ namespace asgn5v1
         double cosine = Math.Cos(0.05);
         double sine = Math.Sin(0.05);
 		double[,] ctrans = new double[4,4];  //your main transformation matrix
+        double xcorrect = 0.0;
+        double ycorrect = 0.0;
+        bool rotateFlag = false;
 		private System.Windows.Forms.ImageList tbimages;
 		private System.Windows.Forms.ToolBar toolBar1;
 		private System.Windows.Forms.ToolBarButton transleftbtn;
@@ -54,8 +58,9 @@ namespace asgn5v1
 		private System.Windows.Forms.ToolBarButton shearleftbtn;
 		private System.Windows.Forms.ToolBarButton toolBarButton5;
 		private System.Windows.Forms.ToolBarButton resetbtn;
-		private System.Windows.Forms.ToolBarButton exitbtn;
+        private System.Windows.Forms.ToolBarButton exitbtn;
 		int[,] lines;
+        System.Windows.Forms.Timer t = new System.Windows.Forms.Timer();
 
 		public Transformer()
 		{
@@ -63,19 +68,20 @@ namespace asgn5v1
 			// Required for Windows Form Designer support
 			//
 			InitializeComponent();
-
+		    t.Interval = 20; // specify interval time as you want
+            t.Tick += new EventHandler(timer_Tick);
 			//
 			// TODO: Add any constructor code after InitializeComponent call
 			//
 			this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
 			this.SetStyle(ControlStyles.UserPaint, true);
 			this.SetStyle(ControlStyles.DoubleBuffer, true);
-			Text = "COMP 4560:  Assignment 5 (200830) (Your Name Here)";
+			Text = "COMP 4560:  Assignment 5 (200830) (Jessica Tekenos)";
 			ResizeRedraw = true;
 			BackColor = Color.Black;
 			MenuItem miNewDat = new MenuItem("New &Data...",
 				new EventHandler(MenuNewDataOnClick));
-			MenuItem miExit = new MenuItem("E&xit", 
+			MenuItem miExit = new MenuItem("&Exit", 
 				new EventHandler(MenuFileExitOnClick));
 			MenuItem miDash = new MenuItem("-");
 			MenuItem miFile = new MenuItem("&File",
@@ -338,7 +344,7 @@ namespace asgn5v1
 		protected override void OnPaint(PaintEventArgs pea)
 		{
 			Graphics grfx = pea.Graphics;
-         Pen pen = new Pen(Color.White, 3);
+            Pen pen = new Pen(Color.White, 3);
 			double temp;
 			int k;
 
@@ -346,7 +352,6 @@ namespace asgn5v1
             {
                 //create the screen coordinates:
                 // scrnpts = vertices*ctrans
-
                 for (int i = 0; i < numpts; i++)
                 {
                     for (int j = 0; j < 4; j++)
@@ -397,6 +402,7 @@ namespace asgn5v1
 
 		bool GetNewData()
 		{
+            setIdentity(ctrans, 4, 4);  //initialize transformation matrix to identity
 			string strinputfile,text;
 			ArrayList coorddata = new ArrayList();
 			ArrayList linesdata = new ArrayList();
@@ -441,12 +447,12 @@ namespace asgn5v1
 				return false;
 			}
 			scrnpts = new double[numpts,4];
-			setIdentity(ctrans,4,4);  //initialize transformation matrix to identity
+			
 			return true;
 		} // end of GetNewData
 
-		void DecodeCoords(ArrayList coorddata)
-		{
+        void DecodeCoords(ArrayList coorddata)
+        {
             PictureBox display = new PictureBox();
 
             display.Width = ClientRectangle.Width;
@@ -455,10 +461,53 @@ namespace asgn5v1
             double midh = (double)display.Height / 2.0d;
             double scaleFactor = midh * .05000;
 
-			//this may allocate slightly more rows that necessary
+            //this may allocate slightly more rows that necessary
             vertices = new double[coorddata.Count, 4];
             numpts = 0;
             string[] text = null;
+
+            //find minimum x and y values
+            for (int i = 0; i < coorddata.Count; i++)
+            {
+                text = coorddata[i].ToString().Split(' ', ',');
+                vertices[numpts, 0] = double.Parse(text[0]);
+                if (vertices[numpts, 0] < 0.0d) break;
+                vertices[numpts, 1] = double.Parse(text[1]);
+                vertices[numpts, 2] = double.Parse(text[2]);
+                vertices[numpts, 3] = 1.0d;
+                numpts++;
+            }
+
+            double xmax = 0; double xmin = 10000.0;
+            double ymax = 0; double ymin = 10000.0;
+
+            for (int i = 1; i < numpts; i++)
+            {
+                if (vertices[i, 0] < 0.0d) break;
+
+                if (xmax < vertices[i, 0])
+                {
+                    xmax = vertices[i, 0];
+                }
+                if (xmin > vertices[i, 0])
+                {
+                    xmin = vertices[i, 0];
+                }
+                if (ymax < vertices[i, 1])
+                {
+                    ymax = vertices[i, 1];
+                }
+                if (ymin > vertices[i, 1])
+                {
+                    ymin = vertices[i, 1];
+                }
+            }
+
+            numpts = 0;
+            ycorrect = scaleFactor * ymin;
+            xcorrect = scaleFactor * xmin;
+
+            //scale and translate image to center and half height of screen
             for (int i = 0; i < coorddata.Count; i++)
             {
                 text = coorddata[i].ToString().Split(' ', ',');
@@ -469,16 +518,15 @@ namespace asgn5v1
                 }
                 else
                 {
-                    vertices[numpts, 0] = ((double.Parse(text[0]) * scaleFactor) + midw) - (midh * .500);
+                    vertices[numpts, 0] = ((double.Parse(text[0]) * scaleFactor) + midw) - (midh * .500) - xcorrect;
                 }
+                vertices[numpts, 1] = (midh - (double.Parse(text[1]) * scaleFactor)) + (midh * .500) + xcorrect;
+                vertices[numpts, 2] = (double.Parse(text[2]) * scaleFactor) - (midh * 0.500);
+                vertices[numpts, 3] = 1.0d;
+                numpts++;
+            }
+        }// end of DecodeCoords
 
-                vertices[numpts, 1] = (midh - (double.Parse(text[1]) * scaleFactor)) + (midh * .500);
-				vertices[numpts,2]= (double.Parse(text[2]) * scaleFactor) - (midh * 0.500);
-				vertices[numpts,3] = 1.0d;
-				numpts++;						
-			}
-			
-		}// end of DecodeCoords
 
 		void DecodeLines(ArrayList linesdata)
 		{
@@ -713,16 +761,36 @@ namespace asgn5v1
                     minY = scrnpts[i, 1];
                 }
             }
+
             //get half height of shape
             double yCorretion = scrnpts[0,1] - minY;
-
             var translate = moveToOrigin();
-            //Net matrix to align bottom edge of shape with x axis
-            var alignWithX = translation(0, -yCorretion, 0);
-            var shearing = shear(s);
-            var reverse = moveBack();
-            //Net matrix to return lower edge of shape
-            var reverseAlignWithX = translation(0, yCorretion, 0);
+            var alignWithX = new double[4, 4];
+            var reverseAlignWithX = new double[4,4];
+            var reverse = new double[4, 4];
+            var shearing = new double[4, 4];
+
+            //checks if the shape's original position is above x axis or not
+            if (ycorrect < 0.0)
+            {
+                alignWithX = translation(0, -yCorretion, 0);
+                shearing = shear(s);
+                reverse = moveBack();
+                //Net matrix to return lower edge of shape
+                reverseAlignWithX = translation(0, yCorretion, 0);
+            }
+            else
+            {
+                //if shape isnt aligned with y = 0, adds additional correction 
+                //so scale happens on shape's y = 0
+                alignWithX = translation(0, -yCorretion - ycorrect, 0);
+                shearing = shear(s);
+                reverse = moveBack();
+                //Net matrix to return lower edge of shape
+                reverseAlignWithX = translation(0, yCorretion + ycorrect, 0);
+            }
+
+            //apply transformations
             var fullreverse = multiplyMatrices(reverseAlignWithX, reverse);
             var aTimesB = multiplyMatrices(translate, alignWithX);
             var abTimesC = multiplyMatrices(aTimesB, shearing);
@@ -731,41 +799,72 @@ namespace asgn5v1
 
         }
 
-        private double incrementByRads(double x) {
+        ///<summary>
+        ///Increment parameter by set amt
+        ///(in this case for continuous rotation)
+        ///</summary>
+        ///<param name="x">(double) to be incremented</param>
+        private double incrementByRads(double x) 
+        {
                 return x+0.05;
         }
 
 		private void Transformer_Load(object sender, System.EventArgs e)
 		{
-			
+            
 		}
+
+        private void contRotation()
+        {
+            double i = 0.05;
+            var resultOfRotation = rotateOp(rotationAxis, i);
+            var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
+            ctrans = applyRotation;
+            i += 0.05;
+            Refresh();
+        }
+
+        void timer_Tick(object sender, EventArgs e)
+        {
+            contRotation();
+        }
+
+        void setRotateFalse() 
+        {
+             rotateFlag = false;
+             t.Stop();
+        }
 
 		private void toolBar1_ButtonClick(object sender, System.Windows.Forms.ToolBarButtonClickEventArgs e)
 		{
 			if (e.Button == transleftbtn)
 			{
+                setRotateFalse();
                 ctrans[3, 0] += -75.0;
 				Refresh();
 			}
 			if (e.Button == transrightbtn) 
 			{
+                setRotateFalse();
                 ctrans[3, 0] += 75.0;
 				Refresh();
 			}
 			if (e.Button == transupbtn)
 			{
+                setRotateFalse();
                 ctrans[3, 1] += -35.0;
 				Refresh();
 			}
 			
 			if(e.Button == transdownbtn)
 			{
+                setRotateFalse();
                 ctrans[3, 1] += 35.0;
 				Refresh();
 			}
 			if (e.Button == scaleupbtn) 
 			{
-                
+                setRotateFalse();
                 var resultOfScaling = scalingOp(1.1, 1.1, 1.1);
                 var applyScaling = multiplyMatrices(ctrans, resultOfScaling);
                 ctrans = applyScaling;
@@ -787,6 +886,7 @@ namespace asgn5v1
 			}
 			if (e.Button == scaledownbtn) 
 			{
+                setRotateFalse();
                 var resultOfScaling = scalingOp(0.9, 0.9, 0.9);
                 var applyScaling = multiplyMatrices(ctrans, resultOfScaling);
                 ctrans = applyScaling;
@@ -794,6 +894,7 @@ namespace asgn5v1
 			}
 			if (e.Button == rotxby1btn) 
 			{
+                setRotateFalse();
                 var resultOfRotation = rotateOp('x', 0.05);
                 var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
                 ctrans = applyRotation;
@@ -801,6 +902,7 @@ namespace asgn5v1
 			}
 			if (e.Button == rotyby1btn) 
 			{
+                setRotateFalse();
                 var resultOfRotation = rotateOp('y', 0.05);
                 var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
                 ctrans = applyRotation;
@@ -808,43 +910,62 @@ namespace asgn5v1
 			}
 			if (e.Button == rotzby1btn) 
 			{
+                setRotateFalse();
+                rotateFlag = false;
+                t.Stop();
                 var resultOfRotation = rotateOp('z', 0.05);
                 var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
                 ctrans = applyRotation;
                 Refresh();
 			}
+            
+            
 			if (e.Button == rotxbtn) 
 			{
-                for (double i = 0.05; i < 10; incrementByRads(i))
+                rotationAxis = 'x';
+                if (rotateFlag)
                 {
-                    var resultOfRotation = rotateOp('x', i);
-                    var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
-                    ctrans = applyRotation;
-                    Refresh();
+                    rotateFlag = false;
+                    t.Stop();
+                }
+                else
+                {
+                    rotateFlag = true;
+                    t.Start();
                 }
 			}
+
 			if (e.Button == rotybtn) 
 			{
-                for (double i = 0.05; i < 10; incrementByRads(i))
+                rotationAxis = 'y';
+                if (rotateFlag)
                 {
-                    var resultOfRotation = rotateOp('y', i);
-                    var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
-                    ctrans = applyRotation;
-                    Refresh();
+                    rotateFlag = false;
+                    t.Stop();
+                }
+                else
+                {
+                    rotateFlag = true;
+                    t.Start();
                 }
 			}
 			if (e.Button == rotzbtn) 
 			{
-                for (double i = 0.05; i < 10; incrementByRads(i))
+                rotationAxis = 'z';
+                if (rotateFlag)
                 {
-                    var resultOfRotation = rotateOp('z', i);
-                    var applyRotation = multiplyMatrices(ctrans, resultOfRotation);
-                    ctrans = applyRotation;
-                    Refresh();
+                    rotateFlag = false;
+                    t.Stop();
+                }
+                else
+                {
+                    rotateFlag = true;
+                    t.Start();
                 }
 			}
 			if(e.Button == shearleftbtn)
 			{
+                setRotateFalse();
                 var resultOfShear = shearOp('l', 0.1);
                 var applyShearing = multiplyMatrices(ctrans, resultOfShear);
                 ctrans = applyShearing;
@@ -852,6 +973,7 @@ namespace asgn5v1
 			}
 			if (e.Button == shearrightbtn) 
 			{
+                setRotateFalse();
                 var resultOfShear = shearOp('r', 0.1);
                 var applyShearing = multiplyMatrices(ctrans, resultOfShear);
                 ctrans = applyShearing;
@@ -859,6 +981,7 @@ namespace asgn5v1
 			}
 			if (e.Button == resetbtn)
 			{
+                setRotateFalse();
 				setIdentity(ctrans, 4, 4);
                 Refresh();
 			}
@@ -868,6 +991,7 @@ namespace asgn5v1
 			}
 
 		}
+
 
 		
 	}
